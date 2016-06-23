@@ -1,0 +1,167 @@
+;;---- General Configuration ----;;
+;; Get Rid of the Bloody Startup Screen and Messages
+(setq inhibit-splash-screen t)
+(setq inhibit-startup-echo-area-message)
+(setq initial-scratch-message "Yay Research!!")
+
+;;Jump to center of a line
+(defun horizontal-center ()
+  (interactive)
+  (goto-char (/ (+ (line-beginning-position) (line-end-position)) 2)))
+(global-set-key (kbd "M-c") 'horizontal-center)
+
+;; mouse scrolling
+(mouse-wheel-mode t)
+
+;; Show line-number and column-number in the mode line
+(line-number-mode 1)
+(column-number-mode 1)
+
+;; Workaround the annoying warnings:
+;;    Warning (mumamo-per-buffer-local-vars):
+;;    Already 'permanent-local t: buffer-file-name
+(when (and (equal emacs-major-version 24)
+           (equal emacs-minor-version 2))
+  (eval-after-load "mumamo"
+    '(setq mumamo-per-buffer-local-vars
+           (delq 'buffer-file-name mumamo-per-buffer-local-vars))))
+ 
+;;---- Color Theme ----;;
+;;Add color theme
+(add-to-list 'custom-theme-load-path "~/.emacs.d/color-theme")
+(load-theme 'tangotango t)
+
+;;Reset Mode Line Background
+(set-face-attribute  'mode-line
+                 nil
+                 :foreground "gray80"
+                 :background "firebrick1"
+                 :box '(:line-width 1 :style released-button))
+(set-face-attribute  'mode-line-inactive
+                 nil
+                 :foreground "gray50"
+                 :background "grey10"
+                 :box '(:line-width 1 :style released-button))
+
+;; Auto Complete
+
+(add-to-list 'load-path "~/.emacs.d/ac")
+(require 'auto-complete-config)
+(add-to-list 'ac-dictionary-directories "~/.emacs.d/ac/ac-dict")
+(ac-config-default)
+(add-to-list 'ac-ignores "//")
+(add-to-list 'ac-ignores "// ")
+
+
+;;---- STATISTICS ----;;
+
+;; ESS
+ (load "/usr/share/emacs/ess/lisp/ess-site")
+;; Underscore Functionality
+;; (ess-toggle-underscore nil)
+
+;; Clear Buffer
+(defun clear-shell ()
+   (interactive)
+   (let ((old-max comint-buffer-maximum-size))
+     (setq comint-buffer-maximum-size 0)
+     (comint-truncate-buffer)
+     (setq comint-buffer-maximum-size old-max)))
+
+
+;;---- WRITING ----;;
+
+;; Package from Jason Blevin's Site: http://jblevins.org/projects/markdown-mode/
+;; Markdown Mode
+;add markdown mode to the path
+(add-to-list 'load-path "~/.emacs.d/markdown-mode")
+
+(autoload 'markdown-mode "markdown-mode"
+  "Major mode for editing Markdown files" t)
+(add-to-list 'auto-mode-alist '(
+          "\\.text$" . markdown-mode))
+(add-to-list 'auto-mode-alist '(
+          "\\.markdown$" . markdown-mode))
+(add-to-list 'auto-mode-alist '(
+          "\\.md$" . markdown-mode))
+
+
+;; set rdiscount to parse markdown-mode
+(custom-set-variables
+ '(markdown-command "rdiscount"))
+  (custom-set-faces)
+
+;; Polymode
+(defun rmd-mode ()
+  "ESS Markdown mode for rmd files"
+  (interactive)
+  (setq load-path
+    (append (list "~/.emacs.d/polymode" "~/.emacs.d/polymode/modes")
+        load-path))
+  (require 'poly-R)
+  (require 'poly-markdown)     
+  (poly-markdown+r-mode))
+
+(setq load-path
+      (append '("~/.emacs.d/polymode/"  "~/.emacs.d/polymode/modes")
+              load-path))
+
+(require 'poly-R)
+(require 'poly-markdown)
+
+;; Wrap line in markdown. Comment if you don't dislike words cut in the middle
+(add-hook 'markdown-mode-hook (lambda () (visual-line-mode 1)))
+
+;; Let you use markdown buffer easily
+(setq ess-nuke-trailing-whitespace-p nil) 
+
+;;; MARKDOWN
+(add-to-list 'auto-mode-alist '("\\.md$" . poly-markdown-mode))
+
+;;; R related modes
+(add-to-list 'auto-mode-alist '("\\.Snw$" . poly-noweb+r-mode))
+(add-to-list 'auto-mode-alist '("\\.Rnw$" . poly-noweb+r-mode))
+(add-to-list 'auto-mode-alist '("\\.Rmd$" . poly-markdown+r-mode))
+(add-to-list 'auto-mode-alist '("\\.rapport$" . poly-rapport-mode))
+(add-to-list 'auto-mode-alist '("\\.Rhtml$" . poly-html+r-mode))
+(add-to-list 'auto-mode-alist '("\\.Rbrew$" . poly-brew+r-mode))
+(add-to-list 'auto-mode-alist '("\\.Rcpp$" . poly-r+c++-mode))
+(add-to-list 'auto-mode-alist '("\\.cppR$" . poly-c++r-mode))
+(provide 'polymode-configuration)
+
+;; LaTeX
+(add-to-list 'load-path "~/.emacs.d/auctex/")
+(load "auctex.el" nil t t)
+(add-hook `LaTeX-mode-hook `turn-on-reftex) ; with AUCTeX LaTeX mode
+(require `tex-style)
+(require `tex-site)
+
+;; SpellCheck
+;; Add spelling modes
+(add-hook `latex-mode-hook `flyspell-mode)
+(add-hook `tex-mode-hook `flyspell-mode)
+(add-hook `bibtex-mode-hook `flyspell-mode)
+ 
+;; Math mode for LaTex
+(add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+
+;; PDF mode (rather than DVI-mode)
+(setq TeX-PDF-mode t); 
+(global-set-key (kbd "<f7>") 'TeX-command-master) ;; need to set a default for this to work.
+(global-set-key (kbd "<f8>") 'TeX-view) ;; jump to *.pdf with synctex (or C-c C-v)
+
+;; PDF to Latex
+(setq latex-run-command "pdflatex")
+
+;;Help AUCTeX find the error
+(setq LaTeX-command-style '(("" "%(PDF)%(latex) -file-line-error %S%(PDFout)")))
+
+
+;;---- PROGRAMMING ----;;
+;; Web Mode
+;; (add-to-list 'load-path "~/.emacs.d/web-mode")
+;; (require 'web-mode)
+;; (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+
+;;nxhtml
+(load "~/.emacs.d/nxhtml/autostart")
